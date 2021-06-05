@@ -1,8 +1,5 @@
 package main.tasks;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import static java.lang.Math.max;
 
 public class IslandArea {
@@ -14,30 +11,45 @@ public class IslandArea {
         int n = grid[0].length;
         int maxSquare = 0;
         Island[] current = new Island[n];
-        for (int i = 0; i < m; i++) {
+        for (int[] aGrid : grid) {
             Island[] previous = current;
             current = new Island[n];
-            CurrentIsland currentIsland = null;
+            Island currentIsland = null;
             for (int j = 0; j < n; j++) {
-                if (isanIsland(grid[i][j])) {
+                if (isanIsland(aGrid[j])) {
                     if (previous[j] != null) {
                         if (currentIsland == null) {
-                            currentIsland = new CurrentIsland(previous[j]);
-                        } else if (!currentIsland.belongsToArchipelag(previous[j])) {
-                            currentIsland.joinIsland(previous[j]);
+                            currentIsland = previous[j];
+                        } else if (currentIsland != previous[j]) {
+                            joinIslands(currentIsland, previous, current, j);
                         }
                     } else if (currentIsland == null) {
-                        currentIsland = new CurrentIsland(new Island());
+                        currentIsland = new Island();
                     }
                     currentIsland.addSquare();
                     maxSquare = max(maxSquare, currentIsland.getSquare());
-                    current[j] = currentIsland.getCurrentIsland();
+                    current[j] = currentIsland;
                 } else {
                     currentIsland = null;
                 }
             }
         }
         return maxSquare;
+    }
+
+    private void joinIslands(Island currentIsland, Island[] previous, Island[] current, int indexOfIslandToJoin) {
+        currentIsland.joinIslands(previous[indexOfIslandToJoin].getSquare());
+        for (int k = 0; k < indexOfIslandToJoin; k++) {
+            if (current[k] == previous[indexOfIslandToJoin]) {
+                current[k] = currentIsland;
+            }
+        }
+        // todo test indexOfIslandToJoin = n
+        for (int l = previous.length - 1; l > indexOfIslandToJoin; l--) {
+            if( previous[l] == previous[indexOfIslandToJoin]) {
+                previous[l] = currentIsland;
+            }
+        }
     }
 
     private boolean isanIsland(int i) {
@@ -48,50 +60,19 @@ public class IslandArea {
 class Island {
     private int square = 0;
 
-    public Island() {
-    }
-
-    public void addSquare() {
-        square += 1;
-    }
-
-    public void joinIsland(int joiningSquare) {
-        square += joiningSquare;
-    }
-
-    public int getSquare() {
-        return square;
-    }
-}
-
-class CurrentIsland {
-    private Island currentIsland;
-    private Set<Island> joinedIslands = new HashSet<>();
-
-    public CurrentIsland(Island currentIsland) {
-        this.currentIsland = currentIsland;
-    }
-
-    // todo atomic???
-    void joinIsland(Island joinedIsland) {
-        currentIsland.joinIsland(joinedIsland.getSquare());
-        joinedIslands.add(joinedIsland);
-    }
-
-    boolean belongsToArchipelag(Island candidate) {
-        return currentIsland == candidate || joinedIslands.contains(candidate);
+    Island() {
     }
 
     void addSquare() {
-        currentIsland.addSquare();
+        square += 1;
     }
 
-    public Island getCurrentIsland() {
-        return currentIsland;
+    void joinIslands(int joiningSquare) {
+        square += joiningSquare;
     }
 
-    public int getSquare() {
-        return currentIsland.getSquare();
+    int getSquare() {
+        return square;
     }
 }
 
